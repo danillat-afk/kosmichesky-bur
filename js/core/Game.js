@@ -4,41 +4,51 @@
  */
 
 class Game {
-    constructor() {
-        this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
+constructor() {
+    this.canvas = document.getElementById('gameCanvas');
+    this.ctx = this.canvas.getContext('2d', { alpha: false }); // отключаем альфа-канал
 
-        // Фиксированное разрешение
+    // Определяем размеры в зависимости от платформы
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        this.width = 540;
+        this.height = 960;
+    } else {
         this.width = 1080;
         this.height = 1920;
-        this.canvas.width = this.width;
-        this.canvas.height = this.height;
-        
-        console.log('Canvas size:', this.canvas.width, 'x', this.canvas.height);
-
-        // Инициализация систем
-        this.renderer = new Renderer(this);
-        this.input = new Input(this);
-        this.economy = new Economy();
-        this.upgrades = new Upgrades(this);
-        this.driftSystem = new DriftSystem(this);
-        this.saveManager = new SaveManager(this);
-
-        // Сущности
-        this.drill = new Drill(this);
-        this.ground = new Ground(this);
-        this.particles = [];
-
-        // Состояние игры
-        this.isRunning = false;
-        this.lastTime = 0;
-        this.camera = { x: 0, y: 0 };
-        
-        // Счётчик слоёв
-        this.currentLayer = 0;
-
-        this.init();
     }
+
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
+
+    console.log('Canvas size:', this.canvas.width, 'x', this.canvas.height);
+
+    // Инициализация систем
+    this.renderer = new Renderer(this);
+    this.input = new Input(this);
+    this.economy = new Economy();
+    this.upgrades = new Upgrades(this);
+    this.driftSystem = new DriftSystem(this);
+    this.saveManager = new SaveManager(this);
+
+    // Сущности
+    this.drill = new Drill(this);
+    this.ground = new Ground(this);
+    this.particles = [];
+
+    // Лимит частиц для производительности
+    this.maxParticles = 300;
+
+    // Состояние игры
+    this.isRunning = false;
+    this.lastTime = 0;
+    this.camera = { x: 0, y: 0 };
+
+    // Счётчик слоёв (больше не используется, но оставим)
+    this.currentLayer = 0;
+
+    this.init();
+}
 
     init() {
         // Устанавливаем начальную позицию камеры
@@ -208,8 +218,11 @@ class Game {
     }
 
     createParticle(x, y, type, color, size = null) {
-        this.particles.push(new Particle(x, y, type, color, size));
+    if (this.particles.length >= this.maxParticles) {
+        this.particles.shift(); // удаляем самую старую частицу
     }
+    this.particles.push(new Particle(x, y, type, color, size));
+}
 }
 
 // Запуск при загрузке
